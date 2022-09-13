@@ -1,0 +1,20 @@
+{
+  "name": "potato",
+  "version": "1.0.0",
+  "description": "",
+  "main": "potato.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theraccoonbear/potato.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/theraccoonbear/potato/issues"
+  },
+  "homepage": "https://github.com/theraccoonbear/potato#readme",
+  "type": "module"
+}
