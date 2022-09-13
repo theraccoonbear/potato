@@ -1,4 +1,29 @@
+import { spend as humanSpend } from './agents/human.js';
+import fs from 'fs/promises';
+
+const exists = async(file) => await fs.stat(file)
+    .then(() => true)
+    .catch(() => false);
+
 (() => {
+    let spend;
+    let customAgent = false;
+
+    const getAgent = async () => {
+        if (process.argv.length > 2) {
+            const name = process.argv[2];
+            const path = `./agents/${name}.js`;
+            const e = await exists(path);
+            if (e) {
+                const agent = await import(path);
+                customAgent = true;
+                return agent.spend;
+            }
+        }
+        return humanSpend;
+    };
+
+
     const weHave = {d:0,p:0,o:0,c:1,t:1};
     const itemKey = {d:'Destiny',o:'Orcs',p:'Potatoes',c:'Orc price'};
     const game = { 
@@ -39,6 +64,7 @@
     };
 
     const anyKey = async () => {
+        if (customAgent) { return; }
         console.log('\nPress any key to continue...');
         const res = await getKeypress();
         if (res.toUpperCase() === 'Q') { process.exit(0); }
@@ -62,7 +88,7 @@
         const e = options[event];
         if (typeof e === 'string') {
             process.stdout.write(`${options[e].m}... `);
-            await sleep(500);
+            if (!customAgent) { await sleep(500); }
             return doGameEvent(roll(6), options[e], state);
         }
         if (typeof e.m !== 'undefined') { console.log(e.m); }
@@ -77,22 +103,6 @@
             });
         show(state);
         if (!postTurnEvent(state)) { await anyKey(); }
-    };
-
-
-    const spend = async (state) => {
-        console.log("\n");
-        const a = await getOneOf('Spend a potato to send an orc away (y/N)?', ['Y','N', "\n"]);
-        if (a.toUpperCase() === 'Q') {
-            process.exit(0);
-        }
-        if (a.toUpperCase() !== 'N') {
-            state.p--;
-            state.o--;
-            if (state.o > 0 && state.p > 0 && state.p < 10) {
-                return spend(state);
-            }
-        }
     };
 
     const postTurnEvent = (state) => state.p >= 10 || state.d >= 10 || (state.o > 0 && state.p > 0);
@@ -121,6 +131,7 @@
 
 
     const run = async (gameData, have) => {
+        spend = await getAgent();
         const state = {...have};
         const outcome = await processStep(gameData, state);
         console.log(outcome ? 'Success, you lived!' : 'Failure, you died!');
